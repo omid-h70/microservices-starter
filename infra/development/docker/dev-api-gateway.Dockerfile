@@ -2,7 +2,7 @@ FROM alpine
 
 WORKDIR /app
 #build is done one my system
-COPY ./build/trip-service .
+COPY ./build/api-gateway .
 
 EXPOSE 8081
-CMD ["/app/trip-service"]
+CMD ["/app/api-gateway"]

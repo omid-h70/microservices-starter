@@ -1,0 +1,78 @@
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/shared/types"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type DefaultTripService struct {
+	repo domain.TripRepository
+}
+
+func NewDefaultTripService(repo domain.TripRepository) DefaultTripService {
+	return DefaultTripService{
+		repo: repo,
+	}
+}
+
+func (d *DefaultTripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*domain.TripModel, error) {
+
+	return &domain.TripModel{
+		ID:       primitive.NewObjectID(),
+		UserID:   fare.UserID,
+		Status:   "pending",
+		RideFare: fare,
+	}, nil
+}
+
+func (d *DefaultTripService) GetRoute(ctx context.Context, pickup, dest *types.Coordinate) (osrm *types.OsrmApiResponse, err error) {
+
+	//original smaple
+	//url := fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?overview=full&geometries=geojson")
+
+	url := fmt.Sprintf(
+		"http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson",
+		pickup.Longitude,
+		pickup.Latitude,
+		dest.Longitude,
+		dest.Latitude,
+	)
+
+	var rsp *http.Response
+	rsp, err = http.Get(url)
+
+	defer func() {
+		err = rsp.Body.Close()
+	}()
+
+	if err != nil {
+		//TODO handle errors from external apis
+		log.Printf("remote url request failed %v", err)
+		return nil, err
+	}
+
+	var body []byte
+	body, err = io.ReadAll(rsp.Body)
+	if err != nil {
+		log.Printf("reading body failed %v", err)
+		return nil, err
+	}
+
+	var osrmResp types.OsrmApiResponse
+	err = json.Unmarshal(body, &osrmResp)
+	if err != nil {
+		log.Printf("json parsing failed %v", err)
+		return nil, err
+	}
+
+	osrm = &osrmResp
+	return
+}

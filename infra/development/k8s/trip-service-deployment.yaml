@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: trip-service
-          image: ride-sharing/trip-service
+          image: k3d-trip-cluster-registry:5000/trip-service:1.0.0
           ports:
             - containerPort: 8083
           resources:

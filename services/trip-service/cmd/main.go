@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	myhttp "ride-sharing/services/trip-service/internal/infrastructure/http"
+	"ride-sharing/services/trip-service/internal/infrastructure/repository"
+	"ride-sharing/services/trip-service/internal/service"
 	"ride-sharing/shared/env"
 )
 
@@ -13,9 +16,12 @@ var (
 )
 
 func main() {
-	log.Println("Starting API Gateway")
+	log.Println("Starting Trip Service")
 
 	mux := http.NewServeMux()
+	repo := repository.NewDefaultTripRepository()
+	svc := service.NewDefaultTripService(&repo)
+	h := myhttp.HttpHandler{Service: &svc}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -23,7 +29,7 @@ func main() {
 		w.Write([]byte("Hello from API Gateway \n path => " + msg))
 	})
 
-	mux.HandleFunc("/trip/preview", handleTripPreview)
+	mux.HandleFunc("/trip/preview", h.HandleTripPreview)
 
 	server := &http.Server{
 		Addr:    httpAddr,

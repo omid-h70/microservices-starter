@@ -11,7 +11,7 @@ k8s_yaml('./infra/development/k8s/app-config.yaml')
 ### End of K8s Config ###
 ### API Gateway ###
 
-gateway_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway'
+gateway_compile_cmd = 'bash -lc "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway"'
 if os.name == 'nt':
   gateway_compile_cmd = './infra/development/docker/api-gateway-build.bat'
 
@@ -21,24 +21,24 @@ local_resource(
   deps=['./services/api-gateway', './shared'], labels="compiles")
 
 
-docker_build_with_restart(
-  'ride-sharing/api-gateway',
-  '.',
-  entrypoint=['/app/build/api-gateway'],
-  dockerfile='./infra/development/docker/api-gateway.Dockerfile',
-  only=[
-    './build/api-gateway',
-    './shared',
-  ],
-  live_update=[
-    sync('./build', '/app/build'),
-    sync('./shared', '/app/shared'),
-  ],
-)
+#docker_build_with_restart(
+#  'ride-sharing/api-gateway', 
+#  '.',
+#  entrypoint=['/app/build/api-gateway'],
+#  dockerfile='./infra/development/docker/api-gateway.Dockerfile',
+#  only=[
+#    './build/api-gateway',
+#    './shared',
+#  ],
+#  live_update=[
+#    sync('./build', '/app/build'),
+#    sync('./shared', '/app/shared'),
+#  ],
+#)
 
-k8s_yaml('./infra/development/k8s/api-gateway-deployment.yaml')
-k8s_resource('api-gateway', port_forwards=8081,
-             resource_deps=['api-gateway-compile'], labels="services")
+#k8s_yaml('./infra/development/k8s/api-gateway-deployment.yaml')
+#k8s_resource('api-gateway', port_forwards=8081,
+#            resource_deps=['api-gateway-compile'], labels="services")
 ### End of API Gateway ###
 ### Trip Service ###
 
@@ -74,10 +74,17 @@ k8s_resource('api-gateway', port_forwards=8081,
 ### End of Trip Service ###
 ### Web Frontend ###
 
-docker_build(
+#docker_build(
+#  'ride-sharing/web',
+#  '.',
+#  dockerfile='./infra/development/docker/web.Dockerfile'
+#)
+
+custom_build(
   'ride-sharing/web',
-  '.',
-  dockerfile='./infra/development/docker/web.Dockerfile',
+  'docker build -t $EXPECTED_REF -f ./infra/development/docker/web.Dockerfile .',
+  ['.'],
+  disable_push=True
 )
 
 k8s_yaml('./infra/development/k8s/web-deployment.yaml')
