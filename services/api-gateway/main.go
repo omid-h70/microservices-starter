@@ -23,7 +23,9 @@ func main() {
 		w.Write([]byte("Hello from API Gateway \n path => " + msg))
 	})
 
-	mux.HandleFunc("/trip/preview", handleTripPreview)
+	mux.HandleFunc("POST /trip/preview", handleTripPreview)
+	mux.HandleFunc("/ws/driver", handleDriverWebSocket)
+	mux.HandleFunc("/ws/rider", handleRidersWebSocket)
 
 	server := &http.Server{
 		Addr:    httpAddr,

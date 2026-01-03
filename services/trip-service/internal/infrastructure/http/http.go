@@ -8,13 +8,21 @@ import (
 )
 
 type HttpHandler struct {
-	Service domain.TripService
+	service domain.TripService
 }
 
 type previewTripRequest struct {
 	UserID      string           `json:"userID"`
 	Pickup      types.Coordinate `json:"pickup"`
 	Destination types.Coordinate `json:"destination"`
+}
+
+func NewHttpHandler(service domain.TripService) *HttpHandler {
+
+	handler := &HttpHandler{
+		service: service,
+	}
+	return handler
 }
 
 func (h *HttpHandler) HandleTripPreview(w http.ResponseWriter, r *http.Request) {
@@ -39,5 +47,5 @@ func (h *HttpHandler) HandleTripPreview(w http.ResponseWriter, r *http.Request) 
 	}
 
 	ctx := r.Context()
-	h.Service.GetRoute(ctx, &reqBody.Destination, &reqBody.Pickup)
+	h.service.GetRoute(ctx, &reqBody.Destination, &reqBody.Pickup)
 }

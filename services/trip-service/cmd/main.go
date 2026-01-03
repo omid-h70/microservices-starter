@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
-	myhttp "ride-sharing/services/trip-service/internal/infrastructure/http"
+	httpserver "ride-sharing/services/trip-service/cmd/api"
+	grpcserver "ride-sharing/services/trip-service/cmd/gapi"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/services/trip-service/internal/service"
 	"ride-sharing/shared/env"
@@ -13,30 +12,30 @@ import (
 
 var (
 	httpAddr = env.GetString("HTTP_ADDR", ":8081")
+	grpcAddr = env.GetString("GRPC_ADDR", ":9091")
 )
 
 func main() {
 	log.Println("Starting Trip Service")
 
-	mux := http.NewServeMux()
 	repo := repository.NewDefaultTripRepository()
 	svc := service.NewDefaultTripService(&repo)
-	h := myhttp.HttpHandler{Service: &svc}
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		msg := fmt.Sprintf("path %s", r.URL.Path)
-		w.Write([]byte("Hello from API Gateway \n path => " + msg))
-	})
+	errorChan := make(chan error)
+	httpSever, _ := httpserver.NewHttpServer(&svc)
+	httpSever.SetupRoutes()
 
-	mux.HandleFunc("/trip/preview", h.HandleTripPreview)
+	go func() {
+		errorChan <- httpSever.RunServer(httpAddr)
+	}()
 
-	server := &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
-	}
+	gRPCServer, _ := grpcserver.NewGRPCServer()
+	gRPCServer.SetupRoutes()
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("%v", err)
-	}
+	go func() {
+		errorChan <- gRPCServer.RunServer(grpcAddr)
+	}()
+
+	err := <-errorChan
+	log.Fatalf("sth went wrong ::: %v", err)
 }
