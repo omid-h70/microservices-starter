@@ -9,6 +9,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var (
+	userIDVar   = "userID"
+	packageSlug = "packageSlug"
+)
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
@@ -24,9 +29,9 @@ func handleRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	defer conn.Close()
 
-	userID := r.URL.Query().Get("UserID")
+	userID := r.URL.Query().Get(userIDVar)
 	if len(userID) == 0 {
-		log.Println("userID is not provide")
+		log.Println("userID is not provided")
 	}
 
 	for {
@@ -35,7 +40,7 @@ func handleRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 			log.Printf("read ws message failed %v", err)
 			return
 		}
-		log.Printf("got ws message failed %v", msg)
+		log.Printf("got ws message %v", msg)
 	}
 }
 
@@ -49,23 +54,23 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	defer conn.Close()
 
-	userID := r.URL.Query().Get("UserID")
+	userID := r.URL.Query().Get(userIDVar)
 	if len(userID) == 0 {
-		log.Println("userID is not provide")
+		log.Println(userIDVar + "is not provide")
 	}
 
-	packageSlug := r.URL.Query().Get("PackageSlug")
+	packageSlug := r.URL.Query().Get(packageSlug)
 	if len(packageSlug) == 0 {
-		log.Println("packageSlug is not provide")
+		log.Println(packageSlug + "is not provide")
 	}
 
 	//TODO refactor here
 	type Driver struct {
-		UserID         string `json:userID`
-		Name           string `json:name`
-		ProfilePIcture string `json:profilePicture`
-		CarPlate       string `json:carPlate`
-		PackageSlug    string `json:packageSlug`
+		UserID         string `json:"userID"`
+		Name           string `json:"name"`
+		ProfilePicture string `json:"profilePicture"`
+		CarPlate       string `json:"carPlate"`
+		PackageSlug    string `json:"packageSlug"`
 	}
 
 	msg := contracts.WSMessage{
@@ -73,7 +78,7 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 		Data: Driver{
 			UserID:         userID,
 			Name:           "dodo",
-			ProfilePIcture: util.GetRandomAvatar(1),
+			ProfilePicture: util.GetRandomAvatar(1),
 			CarPlate:       "ABCDEFG123",
 			PackageSlug:    packageSlug,
 		},
@@ -90,6 +95,6 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 			log.Printf("read ws message failed %v", err)
 			return
 		}
-		log.Printf("got ws message failed %v", msg)
+		log.Printf("got ws message %v", msg)
 	}
 }
