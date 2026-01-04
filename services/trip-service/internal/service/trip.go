@@ -77,3 +77,14 @@ func (d *DefaultTripService) GetRoute(ctx context.Context, pickup, dest *types.C
 	osrm = &osrmResp
 	return
 }
+
+func (d *DefaultTripService) EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel {
+	return nil
+}
+
+func (d *DefaultTripService) GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
+	return nil, nil
+}
+func (d *DefaultTripService) GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error) {
+	return nil, nil
+}

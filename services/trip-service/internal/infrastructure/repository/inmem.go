@@ -5,6 +5,8 @@ import (
 	"ride-sharing/services/trip-service/internal/domain"
 )
 
+var _ domain.TripRepository = (*InMemRepository)(nil)
+
 type InMemRepository struct {
 	trips     map[string]*domain.TripModel
 	rideFares map[string]*domain.RideFareModel
@@ -19,4 +21,12 @@ func NewInMemRepository() *InMemRepository {
 
 func (inmem *InMemRepository) CreateTrip(ctx context.Context, trip *domain.TripModel) (*domain.TripModel, error) {
 	return &domain.TripModel{}, nil
+}
+
+func (inmem *InMemRepository) SaveRideFare(ctx context.Context, f *domain.RideFareModel) error {
+	return nil
+}
+
+func (inmem *InMemRepository) GetRideFareByID(ctx context.Context, id string) (*domain.RideFareModel, error) {
+	return nil, nil
 }

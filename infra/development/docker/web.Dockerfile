@@ -12,4 +12,7 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+#CMD ["npm", "start"]
+
+# to reflect changes in env vars and not using pre-built env vars
+CMD ["npm", "run", "dev"]

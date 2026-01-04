@@ -18,8 +18,8 @@ var (
 func main() {
 	log.Println("Starting Trip Service")
 
-	repo := repository.NewDefaultTripRepository()
-	svc := service.NewDefaultTripService(&repo)
+	repo := repository.NewInMemRepository()
+	svc := service.NewDefaultTripService(repo)
 
 	errorChan := make(chan error)
 	httpSever, _ := httpserver.NewHttpServer(&svc)

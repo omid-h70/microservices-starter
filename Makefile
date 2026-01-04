@@ -24,6 +24,7 @@ CLUSTER_NAME=trip-cluster
 CLUSTER_REGISTERY_NAME=${CLUSTER_NAME}-registry
 API_GATEWAY_IMAGE=api-gateway:1.0.5
 TRIP_SERVICE_IMAGE=trip-service:1.0.1
+FRONTEND_IMAGE=web:1.0.0
 SHELL := /bin/bash
 
 k3d-cluster-up:
@@ -35,7 +36,7 @@ k3d-cluster-down:
 	k3d cluster delete ${CLUSTER_NAME}
 
 build-web:	
-	docker build -t web:1.0.0 -f ./infra/development/docker/web.Dockerfile .
+	docker build -t ${FRONTEND_IMAGE} -f ./infra/development/docker/web.Dockerfile .
 
 #for path compatibility between normal user build and sudo build "export" added
 build-dev-api-gateway:
