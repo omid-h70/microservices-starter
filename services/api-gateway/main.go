@@ -19,7 +19,7 @@ func main() {
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		msg := fmt.Sprintf("Got %s", r.URL.Path)
+		msg := fmt.Sprintf("got %s", r.URL.Path)
 		w.Write([]byte("Hello from API Gateway \n path => " + msg))
 	})
 

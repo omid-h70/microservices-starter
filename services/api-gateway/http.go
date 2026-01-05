@@ -65,7 +65,7 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Got %v", tripRequestArgs)
+	log.Printf("got after decode %v", tripRequestArgs)
 
 	//TODO add more validation
 	if tripRequestArgs.UserID == "" {

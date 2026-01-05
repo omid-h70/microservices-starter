@@ -6,7 +6,7 @@ services:
     ports:
       - "8881:8081"
     environment:
-      - TRIP_SERVICE_URL=http://trip-service:9091
+      - TRIP_SERVICE_URL=trip-service:9091
     networks:
       - trip-network
   trip-service:

@@ -42,7 +42,7 @@ func (h *HttpHandler) HandleTripPreview(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "failed to parse json data", http.StatusBadRequest)
 		return
 	}
-	log.Printf("Got %v", reqBody)
+	log.Printf("got %v", reqBody)
 
 	//TODO add more validation
 	if reqBody.UserID == "" {
