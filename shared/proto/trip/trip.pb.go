@@ -573,8 +573,8 @@ type TripDriver struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	ProfilePic    string                 `protobuf:"bytes,3,opt,name=profilePic,proto3" json:"profilePic,omitempty"`
-	PlateNum      string                 `protobuf:"bytes,4,opt,name=plateNum,proto3" json:"plateNum,omitempty"`
+	ProfilePic    string                 `protobuf:"bytes,3,opt,name=profile_pic,json=profilePic,proto3" json:"profile_pic,omitempty"`
+	PlateNum      string                 `protobuf:"bytes,4,opt,name=plate_num,json=plateNum,proto3" json:"plate_num,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -683,15 +683,14 @@ const file_trip_proto_rawDesc = "" +
 	"\x05route\x18\x03 \x01(\v2\v.trip.RouteR\x05route\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12\x17\n" +
 	"\auser_id\x18\x05 \x01(\tR\x06userId\x12(\n" +
-	"\x06driver\x18\x06 \x01(\v2\x10.trip.TripDriverR\x06driver\"l\n" +
+	"\x06driver\x18\x06 \x01(\v2\x10.trip.TripDriverR\x06driver\"n\n" +
 	"\n" +
 	"TripDriver\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1e\n" +
-	"\n" +
-	"profilePic\x18\x03 \x01(\tR\n" +
-	"profilePic\x12\x1a\n" +
-	"\bplateNum\x18\x04 \x01(\tR\bplateNum2\x92\x01\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
+	"\vprofile_pic\x18\x03 \x01(\tR\n" +
+	"profilePic\x12\x1b\n" +
+	"\tplate_num\x18\x04 \x01(\tR\bplateNum2\x92\x01\n" +
 	"\vTripService\x12?\n" +
 	"\n" +
 	"CreateTrip\x12\x17.trip.CreateTripRequest\x1a\x18.trip.CreateTripResponse\x12B\n" +

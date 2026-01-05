@@ -16,7 +16,7 @@ var (
 )
 
 func main() {
-	log.Println("Starting Trip Service")
+	log.Printf("Starting Trip Service At http %s GRPC %s", httpAddr, grpcAddr)
 
 	repo := repository.NewInMemRepository()
 	svc := service.NewDefaultTripService(repo)
@@ -37,5 +37,8 @@ func main() {
 	}()
 
 	err := <-errorChan
-	log.Fatalf("sth went wrong ::: %v", err)
+	if err != nil {
+		log.Fatalf("sth went wrong ::: %v", err)
+	}
+	log.Println("Done !")
 }

@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/shared/contracts"
-	"ride-sharing/shared/proto/trip"
 )
 
 func _handleTripPreview(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +53,7 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	//DEPRECATED
+	//DEPRECATED - but let it stay here for now
 	if r.Method != http.MethodPost {
 		http.Error(w, "bad REST verb request", http.StatusBadRequest)
 		return
@@ -65,6 +65,8 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Got %v", tripRequestArgs)
+
 	//TODO add more validation
 	if tripRequestArgs.UserID == "" {
 		http.Error(w, "UserID is required", http.StatusBadRequest)
@@ -74,31 +76,18 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 	//TODO - make connections better and more powerful !
 	tripService, err := grpc_clients.NewTripServiceClient()
 	if err != nil {
+		log.Printf("failed to stablish grpc connection %v", err)
 		http.Error(w, "internal server.Error", http.StatusInternalServerError)
 		return
 	}
 	defer tripService.Close()
 
-	grpcReqArgs := trip.PreviewTripRequest{
-		UserId: tripRequestArgs.UserID,
-		StartLocation: &trip.Coordinate{
-			Latitude:  tripRequestArgs.Pickup.Latitude,
-			Longitude: tripRequestArgs.Pickup.Longitude,
-		},
-		EndLocation: &trip.Coordinate{
-			Latitude:  tripRequestArgs.Dest.Latitude,
-			Longitude: tripRequestArgs.Dest.Longitude,
-		},
-	}
-	grpcResp, err := tripService.Client.PreviewTrip(r.Context(), &grpcReqArgs)
+	grpcResp, err := tripService.Client.PreviewTrip(r.Context(), tripRequestArgs.toProto())
 	if err != nil {
-		http.Error(w, "internal server.Error", http.StatusInternalServerError)
+		log.Printf("failed to preview trip %v", err)
+		http.Error(w, "internal server Error", http.StatusInternalServerError)
 		return
 	}
-
-	//jsonData, err := json.Marshal(reqBody)
-
-	//TODO call external trip service
 
 	resp := contracts.APIResponse{
 		Data: grpcResp,

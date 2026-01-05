@@ -62,8 +62,8 @@ message Trip{
 message TripDriver{
     string id=1;
     string name = 2;
-    string profilePic = 3;
-    string plateNum = 4;
+    string profile_pic = 3;
+    string plate_num = 4;
 }
 
 service TripService {

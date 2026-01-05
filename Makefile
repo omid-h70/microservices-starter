@@ -1,3 +1,8 @@
+ifneq ("$(wildcard .env)","")
+    include .env
+    export # This exports every variable defined in the Makefile to the shell
+endif
+
 PROTO_DIR := proto
 PROTO_SRC := $(wildcard $(PROTO_DIR)/*.proto)
 GO_OUT := .
@@ -22,9 +27,9 @@ clear-proto:
 
 CLUSTER_NAME=trip-cluster
 CLUSTER_REGISTERY_NAME=${CLUSTER_NAME}-registry
-API_GATEWAY_IMAGE=api-gateway:1.0.5
-TRIP_SERVICE_IMAGE=trip-service:1.0.1
-FRONTEND_IMAGE=web:1.0.0
+#API_GATEWAY_IMAGE=api-gateway:1.0.6
+#TRIP_SERVICE_IMAGE=trip-service:1.0.2
+#FRONTEND_IMAGE=web:1.0.1
 SHELL := /bin/bash
 
 k3d-cluster-up:
@@ -36,7 +41,7 @@ k3d-cluster-down:
 	k3d cluster delete ${CLUSTER_NAME}
 
 build-web:	
-	docker build -t ${FRONTEND_IMAGE} -f ./infra/development/docker/web.Dockerfile .
+	docker build -t $(FRONTEND_IMAGE) -f ./infra/development/docker/web.Dockerfile .
 
 #for path compatibility between normal user build and sudo build "export" added
 build-dev-api-gateway:
@@ -56,6 +61,10 @@ build-trip-service:
 	export PATH=$$PATH:/usr/local/go/bin && \
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/trip-service ./services/trip-service/cmd && \
 	docker build --no-cache -t ${TRIP_SERVICE_IMAGE} -f ./infra/development/docker/trip-service.Dockerfile .
+
+#The @ suppresses printing of the command itself, so the output will be just:
+build-all: build-trip-service build-dev-api-gateway
+	@echo "All builds done!"
 
 debug-trip-service:
 	docker run --rm -d -p 7777:8081 ${TRIP_SERVICE_IMAGE}

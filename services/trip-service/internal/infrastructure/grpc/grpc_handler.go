@@ -30,6 +30,7 @@ func NewGRPCHandler(grpcServer *grpc.Server, service domain.TripService) *GRPCHa
 }
 
 func (h *GRPCHandler) CreateTrip(ctx context.Context, pbReq *pb.CreateTripRequest) (*pb.CreateTripResponse, error) {
+	return nil, nil
 }
 
 func (h *GRPCHandler) PreviewTrip(ctx context.Context, pbReq *pb.PreviewTripRequest) (*pb.PreviewTripResponse, error) {

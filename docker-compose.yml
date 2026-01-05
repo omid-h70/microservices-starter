@@ -1,14 +1,16 @@
 version: "3.9"
 services:
   api-gateway:
-    image: api-gateway:1.0.5
+    image: ${API_GATEWAY_IMAGE}
     restart: unless-stopped
     ports:
       - "8881:8081"
+    environment:
+      - TRIP_SERVICE_URL=http://trip-service:9091
     networks:
       - trip-network
   trip-service:
-    image: trip-service:1.0.1
+    image: ${TRIP_SERVICE_IMAGE}
     restart: unless-stopped
     ports:
       - "8882:8081"
@@ -16,7 +18,7 @@ services:
     networks:
       - trip-network
   frontend:
-    image: web:1.0.0
+    image: ${FRONTEND_IMAGE}
     restart: unless-stopped
     ports:
       - "7771:3000"

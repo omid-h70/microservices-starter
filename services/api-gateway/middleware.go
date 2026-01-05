@@ -1,10 +1,30 @@
 package main
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+	"time"
+)
 
-func enableCORS(handler http.HandlerFunc) http.HandlerFunc {
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 
-	return func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+
+		log.Printf(
+			"%s %s %s %v",
+			r.Method,
+			r.URL.Path,
+			r.RemoteAddr,
+			time.Since(start),
+		)
+	})
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		//TODO read origins from a config file
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -16,6 +36,6 @@ func enableCORS(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		handler(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }

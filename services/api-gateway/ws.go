@@ -40,7 +40,8 @@ func handleRidersWebSocket(w http.ResponseWriter, r *http.Request) {
 			log.Printf("read ws message failed %v", err)
 			return
 		}
-		log.Printf("got ws message %v", msg)
+		//conn.WriteJSON("ok")
+		log.Printf("got ws message %s", string(msg))
 	}
 }
 

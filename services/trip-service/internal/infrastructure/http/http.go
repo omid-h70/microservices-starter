@@ -2,9 +2,12 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/types"
+	"ride-sharing/shared/util"
 )
 
 type HttpHandler struct {
@@ -39,6 +42,7 @@ func (h *HttpHandler) HandleTripPreview(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "failed to parse json data", http.StatusBadRequest)
 		return
 	}
+	log.Printf("Got %v", reqBody)
 
 	//TODO add more validation
 	if reqBody.UserID == "" {
@@ -46,6 +50,14 @@ func (h *HttpHandler) HandleTripPreview(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	ctx := r.Context()
-	h.service.GetRoute(ctx, &reqBody.Destination, &reqBody.Pickup)
+	osrmData, err := h.service.GetRoute(r.Context(), &reqBody.Destination, &reqBody.Pickup)
+	if err != nil {
+		http.Error(w, "GetRoute Api failed ", http.StatusBadRequest)
+		return
+	}
+
+	apiResp := contracts.APIResponse{
+		Data: osrmData,
+	}
+	util.WriteJSON(w, http.StatusCreated, apiResp)
 }

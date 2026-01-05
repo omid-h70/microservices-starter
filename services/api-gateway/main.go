@@ -4,30 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"ride-sharing/shared/env"
 )
 
 var (
-	httpAddr = env.GetString("HTTP_ADDR", ":8999")
+	httpAddr = env.GetString("HTTP_ADDR", ":8081")
 )
-
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
-		next.ServeHTTP(w, r)
-
-		log.Printf(
-			"%s %s %s %v",
-			r.Method,
-			r.URL.Path,
-			r.RemoteAddr,
-			time.Since(start),
-		)
-	})
-}
 
 func main() {
 	log.Println("Starting API Gateway at " + httpAddr)
@@ -41,10 +24,14 @@ func main() {
 	})
 
 	mux.HandleFunc("POST /trip/preview", handleTripPreview)
-	mux.HandleFunc("/ws/driver", handleDriverWebSocket)
-	mux.HandleFunc("/ws/rider", handleRidersWebSocket)
+	mux.HandleFunc("/ws/drivers", handleDriverWebSocket)
+	mux.HandleFunc("/ws/riders", handleRidersWebSocket)
 
-	handler := loggingMiddleware(mux)
+	handler := corsMiddleware(
+		loggingMiddleware(
+			mux,
+		),
+	)
 
 	server := &http.Server{
 		Addr:    httpAddr,
