@@ -78,12 +78,75 @@ func (d *DefaultTripService) GetRoute(ctx context.Context, pickup, dest *types.C
 	return
 }
 
+func estimateFareRoute(f *domain.RideFareModel, route *tripTypes.OsrmApiResponse) *domain.RideFareModel {
+	pricingCnf := tripTypes.DefaultPricingConfig()
+	carPackagePrice := f.TotalPricesInCents
+
+	distannceInKM := route.Routes[0].Distance
+	durationInMin := route.Routes[0].Duration
+
+	distanceFare := distannceInKM * pricingCnf.PriceUnitOfDistance
+	timeFare := durationInMin * pricingCnf.PricingPerMinute
+
+	return &domain.RideFareModel{
+		TotalPricesInCents: distanceFare + timeFare + carPackagePrice,
+		PackageSlug:        f.PackageSlug,
+	}
+}
+
+func getBaseFare() []*domain.RideFareModel {
+	return []*domain.RideFareModel{
+		{
+			PackageSlug:        "suv",
+			TotalPricesInCents: 200,
+		},
+		{
+			PackageSlug:        "sedan",
+			TotalPricesInCents: 350,
+		},
+		{
+			PackageSlug:        "van",
+			TotalPricesInCents: 400,
+		},
+		{
+			PackageSlug:        "luxury",
+			TotalPricesInCents: 1000,
+		},
+	}
+}
+
 func (d *DefaultTripService) EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel {
+
+	baseFares := getBaseFare()
+	estimatedFares := make([]*domain.RideFareModel, len(baseFares))
+
+	for i, f := range baseFares {
+		estimatedFares[i] = estimateFareRoute(f, route)
+	}
+
 	return nil
 }
 
 func (d *DefaultTripService) GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
-	return nil, nil
+
+	rideFares := make([]*domain.RideFareModel, len(fares))
+
+	var err error
+	for i, f := range fares {
+		rideFares[i] = &domain.RideFareModel{
+			ID:                 primitive.NewObjectID(),
+			UserID:             userID,
+			TotalPricesInCents: f.TotalPricesInCents,
+			PackageSlug:        f.PackageSlug,
+		}
+
+		err = d.repo.SaveRideFare(ctx, rideFares[i])
+		if err != nil {
+			return nil, fmt.Errorf("failed to save trip fare %w", err)
+		}
+	}
+
+	return rideFares, err
 }
 func (d *DefaultTripService) GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error) {
 	return nil, nil

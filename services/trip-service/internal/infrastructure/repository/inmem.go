@@ -20,10 +20,12 @@ func NewInMemRepository() *InMemRepository {
 }
 
 func (inmem *InMemRepository) CreateTrip(ctx context.Context, trip *domain.TripModel) (*domain.TripModel, error) {
-	return &domain.TripModel{}, nil
+	inmem.trips[trip.ID.Hex()] = trip
+	return trip, nil
 }
 
 func (inmem *InMemRepository) SaveRideFare(ctx context.Context, f *domain.RideFareModel) error {
+	inmem.rideFares[f.ID.Hex()] = f
 	return nil
 }
 
