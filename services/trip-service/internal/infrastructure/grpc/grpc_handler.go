@@ -13,19 +13,18 @@ import (
 
 type GRPCHandler struct {
 	Service domain.TripService
-
 	pb.UnimplementedTripServiceServer
-	grpcServer *grpc.Server
 }
+
+var _ pb.TripServiceServer = (*GRPCHandler)(nil)
 
 // NOTE :: its dependency injection dude !
 func NewGRPCHandler(grpcServer *grpc.Server, service domain.TripService) *GRPCHandler {
 
 	handler := &GRPCHandler{
-		grpcServer: grpcServer,
-		Service:    service,
+		//GrpcServer: grpcServer,
+		Service: service,
 	}
-	pb.RegisterTripServiceServer(grpcServer, handler)
 	return handler
 }
 
@@ -35,7 +34,6 @@ func (h *GRPCHandler) CreateTrip(ctx context.Context, pbReq *pb.CreateTripReques
 
 func (h *GRPCHandler) PreviewTrip(ctx context.Context, pbReq *pb.PreviewTripRequest) (*pb.PreviewTripResponse, error) {
 
-	//ctx := r.Context()
 	startLocation := &types.Coordinate{
 		Latitude:  pbReq.GetStartLocation().Latitude,
 		Longitude: pbReq.GetStartLocation().Longitude,

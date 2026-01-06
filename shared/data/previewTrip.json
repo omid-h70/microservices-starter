@@ -1,0 +1,12 @@
+api-gateway/preview/trip
+{
+    "userID": "0e52dd13-e036-4f67-b973-673a1ff5b96c",
+    "pickup": {
+        "latitude": 37.7749,
+        "longitude": -122.4194
+    },
+    "destination": {
+        "latitude": 37.777685630368225,
+        "longitude": -122.41670608520509
+    }
+}

@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"ride-sharing/services/trip-service/internal/domain"
+	hgrpc "ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	pb "ride-sharing/shared/proto/trip"
 	"syscall"
 
@@ -13,26 +15,46 @@ import (
 )
 
 type GRPCServer struct {
-	pb.UnimplementedTripServiceServer
-	server *grpc.Server
+	handler *hgrpc.GRPCHandler
+	server  *grpc.Server
 }
 
-func NewGRPCServer() (GRPCServer, error) {
+func NewGRPCServer(service domain.TripService) (GRPCServer, error) {
+
+	grpcServer := grpc.NewServer()
+
 	return GRPCServer{
-		server: grpc.NewServer(),
+		server:  grpcServer,
+		handler: hgrpc.NewGRPCHandler(grpcServer, service),
 	}, nil
 }
 
-func (g *GRPCServer) SetupRoutes() {
-	pb.RegisterTripServiceServer(g.server, g)
+func (grpcServer *GRPCServer) SetupRoutes() {
+	pb.RegisterTripServiceServer(grpcServer.server, grpcServer.handler)
 }
 
-func (g *GRPCServer) RunServer(grpcAddr string) error {
+func (grpcServer *GRPCServer) printDebugInfo() {
+	for s, info := range grpcServer.server.GetServiceInfo() {
+		log.Println("registered service:", s)
+		for _, m := range info.Methods {
+			log.Println("  method:", m.Name)
+		}
+	}
+}
+
+func (grpcServer *GRPCServer) RunServer(grpcAddr string) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	errorChan := make(chan error, 1)
+
+	lis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	grpcServer.printDebugInfo()
 
 	go func() {
 		shutdownChan := make(chan os.Signal, 1)
@@ -42,24 +64,17 @@ func (g *GRPCServer) RunServer(grpcAddr string) error {
 	}()
 
 	go func() {
-
-		lis, err := net.Listen("tcp", grpcAddr)
-		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
-		}
-
-		if err := g.server.Serve(lis); err != nil {
+		if err := grpcServer.server.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}
 		errorChan <- err
 	}()
 
-	var err error
 	select {
 	case <-ctx.Done():
 	case err = <-errorChan:
 		log.Println("grpc server is about to end")
-		g.server.GracefulStop()
+		grpcServer.server.GracefulStop()
 	}
 
 	return err

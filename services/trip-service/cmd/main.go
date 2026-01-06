@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	httpserver "ride-sharing/services/trip-service/cmd/api"
 	grpcserver "ride-sharing/services/trip-service/cmd/gapi"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/services/trip-service/internal/service"
@@ -22,14 +21,14 @@ func main() {
 	svc := service.NewDefaultTripService(repo)
 
 	errorChan := make(chan error)
-	httpSever, _ := httpserver.NewHttpServer(&svc)
-	httpSever.SetupRoutes()
+	// httpSever, _ := httpserver.NewHttpServer(&svc)
+	// httpSever.SetupRoutes()
 
-	go func() {
-		errorChan <- httpSever.RunServer(httpAddr)
-	}()
+	// go func() {
+	// 	errorChan <- httpSever.RunServer(httpAddr)
+	// }()
 
-	gRPCServer, _ := grpcserver.NewGRPCServer()
+	gRPCServer, _ := grpcserver.NewGRPCServer(&svc)
 	gRPCServer.SetupRoutes()
 
 	go func() {
