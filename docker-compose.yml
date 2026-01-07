@@ -9,6 +9,14 @@ services:
       - TRIP_SERVICE_URL=trip-service:9091
     networks:
       - trip-network
+  rabbitmq:
+    image: ${RABBITMQ_IMAGE}
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - trip-network
   trip-service:
     image: ${TRIP_SERVICE_IMAGE}
     restart: unless-stopped
