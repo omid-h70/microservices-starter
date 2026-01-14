@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"ride-sharing/services/trip-service/internal/domain"
+	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
 
@@ -12,7 +13,8 @@ import (
 )
 
 type GRPCHandler struct {
-	Service domain.TripService
+	service   domain.TripService
+	publisher *events.TripEventPublisher
 	pb.UnimplementedTripServiceServer
 }
 
@@ -23,13 +25,30 @@ func NewGRPCHandler(grpcServer *grpc.Server, service domain.TripService) *GRPCHa
 
 	handler := &GRPCHandler{
 		//GrpcServer: grpcServer,
-		Service: service,
+		service: service,
 	}
 	return handler
 }
 
 func (h *GRPCHandler) CreateTrip(ctx context.Context, pbReq *pb.CreateTripRequest) (*pb.CreateTripResponse, error) {
-	return nil, nil
+
+	rideFare, err := h.service.GetAndValidateFare(ctx, fareID, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to validate fare %v", err)
+	}
+
+	trip, err := h.service.CreateTrip(ctx, rideFare)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create trip %v", err)
+	}
+
+	if err := h.publisher.PublishTripCreated(ctx); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to publish trip created event %v", err)
+	}
+
+	return &pb.CreateTripResponse{
+		TripId: trip.ID.Hex(),
+	}, nil
 }
 
 func (h *GRPCHandler) PreviewTrip(ctx context.Context, pbReq *pb.PreviewTripRequest) (*pb.PreviewTripResponse, error) {
@@ -52,7 +71,7 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, pbReq *pb.PreviewTripRequ
 	//1. Estimate RideFares prices based on the route (ex: distance)
 	estimatedFares := h.Service.EstimatePackagesPriceWithRoute(apiResp)
 	//2. Store the ride fares for the create trip to fetch and validate
-	rideFares, err := h.Service.GenerateTripFares(ctx, estimatedFares, pbReq.GetUserId())
+	rideFares, err := h.Service.GenerateTripFares(ctx, estimatedFares, pbReq.GetUserId(), apiResp)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate ride fares :%v", err)
 	}

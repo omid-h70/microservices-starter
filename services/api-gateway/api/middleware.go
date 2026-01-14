@@ -1,10 +1,20 @@
-package main
+package api
 
 import (
 	"log"
 	"net/http"
 	"time"
 )
+
+func (api *HttpApi) AddMiddleWares() {
+
+	handler := corsMiddleware(
+		loggingMiddleware(
+			api.mux,
+		),
+	)
+	api.handler = handler
+}
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

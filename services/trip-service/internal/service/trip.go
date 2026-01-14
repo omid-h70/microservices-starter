@@ -127,7 +127,7 @@ func (d *DefaultTripService) EstimatePackagesPriceWithRoute(route *tripTypes.Osr
 	return nil
 }
 
-func (d *DefaultTripService) GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
+func (d *DefaultTripService) GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*domain.RideFareModel, error) {
 
 	rideFares := make([]*domain.RideFareModel, len(fares))
 
@@ -138,6 +138,7 @@ func (d *DefaultTripService) GenerateTripFares(ctx context.Context, fares []*dom
 			UserID:             userID,
 			TotalPricesInCents: f.TotalPricesInCents,
 			PackageSlug:        f.PackageSlug,
+			Route: 				route,
 		}
 
 		err = d.repo.SaveRideFare(ctx, rideFares[i])

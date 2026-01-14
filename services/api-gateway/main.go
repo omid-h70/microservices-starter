@@ -1,44 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
+	"ride-sharing/services/api-gateway/api"
 	"ride-sharing/shared/env"
+	"ride-sharing/shared/messaging"
 )
 
 var (
-	httpAddr = env.GetString("HTTP_ADDR", ":8081")
+	httpAddr    = env.GetString("HTTP_ADDR", ":8081")
+	rabbitMQURI = env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672")
 )
 
 func main() {
 	log.Println("Starting API Gateway at " + httpAddr)
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		msg := fmt.Sprintf("got %s", r.URL.Path)
-		w.Write([]byte("Hello from API Gateway \n path => " + msg))
-	})
-
-	mux.HandleFunc("POST /trip/preview", handleTripPreview)
-	mux.HandleFunc("/ws/drivers", handleDriverWebSocket)
-	mux.HandleFunc("/ws/riders", handleRidersWebSocket)
-
-	handler := corsMiddleware(
-		loggingMiddleware(
-			mux,
-		),
-	)
-
-	server := &http.Server{
-		Addr:    httpAddr,
-		Handler: handler,
+	rabbitmq, err := messaging.NewRabbitMQ(rabbitMQURI)
+	if err != nil {
+		log.Fatalf("rabbit is down %v", err)
 	}
+	defer rabbitmq.Close()
+	log.Printf("Rabbitmq started on %s ", rabbitMQURI)
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("%v", err)
+	httpServer := api.NewHttpApiServer(rabbitmq)
+	httpServer.AddRoutes()
+	httpServer.AddMiddleWares()
+	if err := httpServer.RunServer(httpAddr); err != nil {
+		log.Fatalf("http server failed %v", err)
 	}
 }

@@ -25,7 +25,7 @@ func main() {
 
 	rabbitmq, err := messaging.NewRabbitMQ(rabbitMQURI)
 	if err != nil {
-		log.Fatalf(err)
+		log.Fatalf("rabbit is down %v", err)
 	}
 	defer rabbitmq.Close()
 	log.Printf("Rabbitmq started on %s ", rabbitMQURI)
@@ -45,7 +45,7 @@ func main() {
 		errorChan <- gRPCServer.RunServer(grpcAddr)
 	}()
 
-	err := <-errorChan
+	err = <-errorChan
 	if err != nil {
 		log.Fatalf("sth went wrong ::: %v", err)
 	}

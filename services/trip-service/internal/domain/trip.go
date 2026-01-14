@@ -18,6 +18,17 @@ type TripModel struct {
 	Driver   *pb.TripDriver //FIXME
 }
 
+func (t *TripModel) ToProto() *pb.Trip {
+	return &pb.Trip{
+		Id:           t.ID.Hex(),
+		UserId:       t.UserID,
+		Status:       t.Status,
+		SelectedFare: t.RideFare.ToProto(),
+		Route:        t.RideFare.Route.toProto(),
+		Driver:       t.Driver,
+	}
+}
+
 type TripRepository interface {
 	CreateTrip(ctx context.Context, trip *TripModel) (*TripModel, error)
 	SaveRideFare(ctx context.Context, f *RideFareModel) error
@@ -32,6 +43,6 @@ type TripService interface {
 	//EstimatePackagesPriceWithRoute taks the route and estimates the price
 	EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*RideFareModel
 	//GenerateTripFares it returns multiple packages for user to decide based on it
-	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string) ([]*RideFareModel, error)
+	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*RideFareModel, error)
 	GetAndValidateFare(ctx context.Context, fareID, userID string) (*RideFareModel, error)
 }

@@ -1,17 +1,17 @@
-package main
+package types
 
 import (
 	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
 )
 
-type previewTripRequest struct {
+type PreviewTripRequest struct {
 	UserID string           `json:"userID"`
 	Pickup types.Coordinate `json:"pickup"`
 	Dest   types.Coordinate `json:"destination"`
 }
 
-func (r previewTripRequest) toProto() *pb.PreviewTripRequest {
+func (r PreviewTripRequest) ToProto() *pb.PreviewTripRequest {
 
 	return &pb.PreviewTripRequest{
 		UserId: r.UserID,
