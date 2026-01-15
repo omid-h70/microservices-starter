@@ -48,7 +48,8 @@ func (api *HttpApi) handleRidersWebSocket(w http.ResponseWriter, r *http.Request
 
 	//what queues we want to consume
 	queues := []string{
-		messaging.FindAvailableDriversQueue,
+		messaging.NotifyDriverNoDriverFoundQueue,
+		messaging.NotifyDriverAssingQueue,
 	}
 
 	for _, q := range queues {

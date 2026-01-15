@@ -5,6 +5,7 @@ import (
 
 	httpserver "ride-sharing/services/trip-service/cmd/api"
 	grpcserver "ride-sharing/services/trip-service/cmd/gapi"
+	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/services/trip-service/internal/service"
 	"ride-sharing/shared/env"
@@ -21,7 +22,7 @@ func main() {
 	log.Printf("Starting Trip Service At http %s GRPC %s", httpAddr, grpcAddr)
 
 	repo := repository.NewInMemRepository()
-	svc := service.NewDefaultTripService(repo)
+	svc := service.NewTripService(repo)
 
 	rabbitmq, err := messaging.NewRabbitMQ(rabbitMQURI)
 	if err != nil {
@@ -29,6 +30,10 @@ func main() {
 	}
 	defer rabbitmq.Close()
 	log.Printf("Rabbitmq started on %s ", rabbitMQURI)
+
+	//publisher := events.NewTripEventPubisher(rabbitmq)
+	driverConsumer := events.NewDriverConsumer(rabbitmq, svc)
+	go driverConsumer.Listen()
 
 	errorChan := make(chan error)
 	httpSever, _ := httpserver.NewHttpServer(&svc)

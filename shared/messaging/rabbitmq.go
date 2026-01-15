@@ -35,6 +35,9 @@ var (
 		NotifyDriverNoDriverFoundQueue: {
 			contracts.TripEventNoDriversFound,
 		},
+		NotifyDriverAssingedQueue: {
+			contracts.TripEventDriverAssigned,
+		},
 	}
 )
 

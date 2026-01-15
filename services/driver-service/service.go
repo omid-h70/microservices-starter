@@ -9,6 +9,7 @@ import (
 type driverInMap struct {
 	Driver *pb.Driver
 }
+
 type Service struct {
 	drivers []*driverInMap
 	mu      sync.RWMutex
@@ -38,7 +39,9 @@ func (s *Service) RegisterDriver(driverID string, pacakgeSlug string) (*pb.Drive
 	randomIndex := math.IntN(len(PredefinedRoutes))
 	randomRoute := PredefinedRoutes[randomIndex]
 
-	randomPlate := GenerateRandomPlate()
+	randomPlate := util.GenerateRandomPlate()
 	randomAvatar := util.GetRandomAvatar(randomIndex)
 
+	//we can ignore this property for now, but it must be sent to frontend
+	geohash := geohash.Encode(randomRoute[0][0], randomRoute[0][1])
 }

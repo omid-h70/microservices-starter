@@ -2,7 +2,10 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"ride-sharing/services/trip-service/internal/domain"
+	pbd "ride-sharing/shared/proto/driver"
+	pb "ride-sharing/shared/proto/trip"
 )
 
 var _ domain.TripRepository = (*InMemRepository)(nil)
@@ -30,5 +33,36 @@ func (inmem *InMemRepository) SaveRideFare(ctx context.Context, f *domain.RideFa
 }
 
 func (inmem *InMemRepository) GetRideFareByID(ctx context.Context, id string) (*domain.RideFareModel, error) {
-	return nil, nil
+	trip, ok := inmem.rideFares[id]
+	if !ok {
+		return nil, fmt.Errorf("ridefare not found with id %s", id)
+	}
+	return trip, nil
+}
+
+func (inmem *InMemRepository) GetTripByID(ctx context.Context, id string) (*domain.TripModel, error) {
+	trip, ok := inmem.trips[id]
+	if !ok {
+		return nil, fmt.Errorf("trip not found with id %s", id)
+	}
+	return trip, nil
+}
+
+func (inmem *InMemRepository) UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error {
+	trip, ok := inmem.trips[tripID]
+	if !ok {
+		return fmt.Errorf("trip not found with id %s", tripID)
+	}
+
+	trip.Status = status
+
+	if driver != nil {
+		trip.Driver = &pb.TripDriver{
+			Id:         driver.Id,
+			Name:       driver.Name,
+			CarPlate:   driver.CarPlate,
+			ProfilePic: driver.ProfilePic,
+		}
+	}
+	return nil
 }

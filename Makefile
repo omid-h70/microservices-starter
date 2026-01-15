@@ -77,7 +77,7 @@ k3d-delete-registry:
 
 k3d-push-images:
 # docker tag web:1.0.0 k3d-${CLUSTER_REGISTERY_NAME}:5000/web:1.0.0 && docker push k3d-${CLUSTER_REGISTERY_NAME}:5000/web:1.0.0
-	docker tag web:1.0.0 localhost:5000/web:1.0.0 && docker push localhost:5000/web:1.0.0
+	docker tag $(FRONTEND_IMAGE) localhost:5000/$(FRONTEND_IMAGE) && docker push localhost:5000/$(FRONTEND_IMAGE)
 	docker tag ${API_GATEWAY_IMAGE} localhost:5000/${API_GATEWAY_IMAGE} && docker push localhost:5000/${API_GATEWAY_IMAGE}
 
 k3d-apply:
