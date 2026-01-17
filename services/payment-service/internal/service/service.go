@@ -11,11 +11,13 @@ import (
 )
 
 type paymentService struct {
-	//processor paymentProcessor
+	processor domain.paymentProcessor
 }
 
-func NewPaymentService() domain.Service {
-	return &paymentService{}
+func NewPaymentService(processor domain.paymentProcessor) domain.Service {
+	return &paymentService{
+		processor: processor,
+	}
 }
 
 func (s *paymentService) CreatePaymentSession(
