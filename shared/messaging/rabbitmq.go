@@ -35,8 +35,17 @@ var (
 		NotifyDriverNoDriverFoundQueue: {
 			contracts.TripEventNoDriversFound,
 		},
-		NotifyDriverAssingedQueue: {
+		NotifyDriverAssingQueue: {
 			contracts.TripEventDriverAssigned,
+		},
+		PaymentTripResponseQueue: {
+			contracts.TripEventDriverAssigned,
+		},
+		NotifyPaymentSessionCreatedQueue: {
+			contracts.PaymentEventSessionCreated,
+		},
+		NotifyPaymentSuccessQueue: {
+			contracts.PaymentEventSuccess,
 		},
 	}
 )

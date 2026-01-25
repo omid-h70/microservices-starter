@@ -2,53 +2,20 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/services/api-gateway/types"
 	"ride-sharing/services/api-gateway/utils"
 	"ride-sharing/shared/contracts"
-	"ride-sharing/shared/messaging"
+	"ride-sharing/shared/env"
+
+	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
+	//github.com/stripe/stripe-go/v81/webhook
 )
 
-type HttpApi struct {
-	mux      *http.ServeMux
-	handler  http.Handler
-	rabbitmq *messaging.RabbitMQ
-}
-
-func NewHttpApiServer(rabbit *messaging.RabbitMQ) *HttpApi {
-
-	mux := http.NewServeMux()
-	return &HttpApi{
-		rabbitmq: rabbit,
-		mux:      mux,
-	}
-}
-
-func (api *HttpApi) AddRoutes() {
-	api.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		msg := fmt.Sprintf("got %s", r.URL.Path)
-		w.Write([]byte("Hello from API Gateway \n path => " + msg))
-	})
-
-	api.mux.HandleFunc("POST /trip/preview", handleTripPreview)
-	api.mux.HandleFunc("/ws/drivers", api.handleDriverWebSocket)
-	api.mux.HandleFunc("/ws/riders", api.handleRidersWebSocket)
-}
-
-func (api *HttpApi) RunServer(httpAddr string) error {
-
-	server := &http.Server{
-		Addr:    httpAddr,
-		Handler: api.handler,
-	}
-	return server.ListenAndServe()
-}
-
-func handleTripPreview(w http.ResponseWriter, r *http.Request) {
+func (api *HttpApi) handleTripPreview(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
@@ -92,4 +59,78 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 		Data: grpcResp,
 	}
 	utils.WriteJSON(w, http.StatusCreated, resp)
+}
+
+func (api *HttpApi) handleStripeWebhook(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "failed to read ", http.StatusInternalServerError)
+		return
+	}
+
+	defer r.Body.Close()
+
+	webhookKey := env.GetString("STRIPE_WEBHOOK_KEY", "")
+	if webhookKey == "" {
+		log.Printf("webhookkey required")
+		return
+	}
+
+	event, err := webhook.ConstructEventWithOptions(
+		body,
+		r.Header.Get("Strip-Signature"),
+		webhookKey,
+		webhook.ConstructEventOptions{
+			IgnoreAPIVersionMismatch: true,
+		},
+	)
+
+	if err != nil {
+		log.Printf("error verifying webhook signature %v", err)
+		http.Error(w, "Invalid signature", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("received stripe event: %v", event)
+
+	switch event.Type {
+	case "checkout.session.completed":
+		var session stripe.CheckoutSession
+
+		err := json.Unmarshal(event.Data.Raw, &session)
+		if err != nil {
+			log.Printf("error pasing webhook event data %v", err)
+			http.Error(w, "Invalid payload", http.StatusBadRequest)
+			return
+		}
+	}
+
+	payload := messaging.PaymentStatusUpdateData{
+		TripID:   session.Metadata["trip_id"],
+		UserID:   session.Metadata["user_id"],
+		DriverID: session.Metadata["driver_id"],
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("error pasing webhook event data %v", err)
+		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	message := contracts.AmqpMessage{
+		OwnerID: session.MetaData["user_id"],
+		Data:    payloadBytes,
+	}
+
+	if err := rb.PublishMessage(
+		r.Context(),
+		contracts.PaymentEventSuccess,
+		message,
+	); err != nil {
+		log.Printf("error publishing payment event %v", err)
+		http.Error(w, "failed to publish payment event", http.StatusBadRequest)
+		return
+	}
 }

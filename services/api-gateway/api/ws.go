@@ -46,10 +46,11 @@ func (api *HttpApi) handleRidersWebSocket(w http.ResponseWriter, r *http.Request
 	//for a case that we have userID
 	defer connManger.Remove(userID)
 
-	//what queues we want to consume
+	//what queues we want to consume - Notify queues
 	queues := []string{
 		messaging.NotifyDriverNoDriverFoundQueue,
 		messaging.NotifyDriverAssingQueue,
+		messaging.NotifyPaymentSessionCreatedQueue,
 	}
 
 	for _, q := range queues {

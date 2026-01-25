@@ -13,18 +13,19 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-type driverConsumer struct {
+type paymentConsumer struct {
 	rabbitMq *messaging.RabbitMQ
 	service  *service.TripService
 }
 
-func NewTripConsumer(rabbitMq *messaging.RabbitMQ) *driverConsumer {
-	return &driverConsumer{
+func NewPaymentConsumer(rabbitMq *messaging.RabbitMQ) *paymentConsumer {
+	return &paymentConsumer{
 		rabbitMq: rabbitMq,
 	}
 }
 
-func (c *driverConsumer) Listen(ctx context.Context, queueName string) error {
+func (c *paymentConsumer) Listen(ctx context.Context, queueName string) error {
+	//NotifyPaymentSuccessQueue
 	return c.rabbitMq.ConsumeMessages(ctx, queueName, func(ctx context.Context, msg amqp091.Delivery) error {
 
 		var tripEvent contracts.AmqpMessage
@@ -33,28 +34,24 @@ func (c *driverConsumer) Listen(ctx context.Context, queueName string) error {
 			return err
 		}
 
-		var payload messaging.DriverTripResponseData
+		var payload messaging.PaymentStatusUpdateData
 		if err := json.Unmarshal(tripEvent.Data, &payload); err != nil {
 			log.Printf("failed to unmarshal the message payload %v", err)
 			return err
 		}
 
-		switch msg.RoutingKey {
-		case contracts.DriverCmdTripAccept:
-			if err := c.handleTripAccepted(ctx, payload); err != nil {
-				log.Printf("failed to handleTripAccepted %v", err)
-				return err
-			}
-		case contracts.DriverCmdTripDecline:
-			log.Println("trip declined")
-		}
+		log.Println("trip has been compelted and paid !")
 
-		log.Printf("unknown driver event %+v", payload)
-		return nil
+		return c.service.UpdateTrip(
+			ctx,
+			payload.TripID,
+			"payed",
+			nil,
+		)
 	})
 }
 
-func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messaging.DriverTripResponseData) error {
+func (c *paymentConsumer) handleTripAccepted(ctx context.Context, payload messaging.DriverTripResponseData) error {
 	//1. validate if trip exists
 	tripModel, err := c.service.GetTripByID(ctx, payload.TripID)
 	if err != nil {
