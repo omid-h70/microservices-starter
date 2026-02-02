@@ -32,6 +32,9 @@ func NewGRPCHandler(grpcServer *grpc.Server, service domain.TripService) *GRPCHa
 
 func (h *GRPCHandler) CreateTrip(ctx context.Context, pbReq *pb.CreateTripRequest) (*pb.CreateTripResponse, error) {
 
+	fareID := pbReq.GetRideFareId()
+	userID := pbReq.GetUserId()
+
 	rideFare, err := h.service.GetAndValidateFare(ctx, fareID, userID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to validate fare %v", err)
@@ -42,7 +45,7 @@ func (h *GRPCHandler) CreateTrip(ctx context.Context, pbReq *pb.CreateTripReques
 		return nil, status.Errorf(codes.Internal, "failed to create trip %v", err)
 	}
 
-	if err := h.publisher.PublishTripCreated(ctx); err != nil {
+	if err := h.publisher.PublishTripCreated(ctx, trip); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to publish trip created event %v", err)
 	}
 
@@ -63,15 +66,15 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, pbReq *pb.PreviewTripRequ
 		Longitude: pbReq.GetEndLocation().Longitude,
 	}
 
-	apiResp, err := h.Service.GetRoute(ctx, startLocation, endLocation)
+	apiResp, err := h.service.GetRoute(ctx, startLocation, endLocation)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get route %v", err)
 	}
 
 	//1. Estimate RideFares prices based on the route (ex: distance)
-	estimatedFares := h.Service.EstimatePackagesPriceWithRoute(apiResp)
+	estimatedFares := h.service.EstimatePackagesPriceWithRoute(apiResp)
 	//2. Store the ride fares for the create trip to fetch and validate
-	rideFares, err := h.Service.GenerateTripFares(ctx, estimatedFares, pbReq.GetUserId(), apiResp)
+	rideFares, err := h.service.GenerateTripFares(ctx, estimatedFares, pbReq.GetUserId(), apiResp)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate ride fares :%v", err)
 	}

@@ -24,7 +24,7 @@ const (
 type Location struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Latitude      float64                `protobuf:"fixed64,1,opt,name=latitude,proto3" json:"latitude,omitempty"`
-	Longitue      float64                `protobuf:"fixed64,2,opt,name=longitue,proto3" json:"longitue,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -66,9 +66,9 @@ func (x *Location) GetLatitude() float64 {
 	return 0
 }
 
-func (x *Location) GetLongitue() float64 {
+func (x *Location) GetLongitude() float64 {
 	if x != nil {
-		return x.Longitue
+		return x.Longitude
 	}
 	return 0
 }
@@ -168,6 +168,7 @@ func (x *Driver) GetLocation() *Location {
 type RegisterDriverRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DriverId      string                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	PackageSlug   string                 `protobuf:"bytes,2,opt,name=package_slug,json=packageSlug,proto3" json:"package_slug,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,9 +210,16 @@ func (x *RegisterDriverRequest) GetDriverId() string {
 	return ""
 }
 
+func (x *RegisterDriverRequest) GetPackageSlug() string {
+	if x != nil {
+		return x.PackageSlug
+	}
+	return ""
+}
+
 type RegisterDriverResposne struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Driver        *Driver                `protobuf:"bytes,1,opt,name=driver,proto3" json:"driver,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -246,21 +254,21 @@ func (*RegisterDriverResposne) Descriptor() ([]byte, []int) {
 	return file_driver_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *RegisterDriverResposne) GetId() string {
+func (x *RegisterDriverResposne) GetDriver() *Driver {
 	if x != nil {
-		return x.Id
+		return x.Driver
 	}
-	return ""
+	return nil
 }
 
 var File_driver_proto protoreflect.FileDescriptor
 
 const file_driver_proto_rawDesc = "" +
 	"\n" +
-	"\fdriver.proto\x12\x06driver\"B\n" +
+	"\fdriver.proto\x12\x06driver\"D\n" +
 	"\bLocation\x12\x1a\n" +
-	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1a\n" +
-	"\blongitue\x18\x02 \x01(\x01R\blongitue\"\xd6\x01\n" +
+	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"\xd6\x01\n" +
 	"\x06Driver\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
@@ -269,11 +277,12 @@ const file_driver_proto_rawDesc = "" +
 	"\tcar_plate\x18\x04 \x01(\tR\bcarPlate\x12\x19\n" +
 	"\bgeo_hash\x18\x05 \x01(\tR\ageoHash\x12!\n" +
 	"\fpackage_slug\x18\x06 \x01(\tR\vpackageSlug\x12,\n" +
-	"\blocation\x18\a \x01(\v2\x10.driver.LocationR\blocation\"4\n" +
+	"\blocation\x18\a \x01(\v2\x10.driver.LocationR\blocation\"W\n" +
 	"\x15RegisterDriverRequest\x12\x1b\n" +
-	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\"(\n" +
-	"\x16RegisterDriverResposne\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2\xb3\x01\n" +
+	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\x12!\n" +
+	"\fpackage_slug\x18\x02 \x01(\tR\vpackageSlug\"@\n" +
+	"\x16RegisterDriverResposne\x12&\n" +
+	"\x06driver\x18\x01 \x01(\v2\x0e.driver.DriverR\x06driver2\xb3\x01\n" +
 	"\rDriverService\x12O\n" +
 	"\x0eRegisterDriver\x12\x1d.driver.RegisterDriverRequest\x1a\x1e.driver.RegisterDriverResposne\x12Q\n" +
 	"\x10UnregisterDriver\x12\x1d.driver.RegisterDriverRequest\x1a\x1e.driver.RegisterDriverResposneB\x1cZ\x1ashared/proto/driver;driverb\x06proto3"
@@ -299,15 +308,16 @@ var file_driver_proto_goTypes = []any{
 }
 var file_driver_proto_depIdxs = []int32{
 	0, // 0: driver.Driver.location:type_name -> driver.Location
-	2, // 1: driver.DriverService.RegisterDriver:input_type -> driver.RegisterDriverRequest
-	2, // 2: driver.DriverService.UnregisterDriver:input_type -> driver.RegisterDriverRequest
-	3, // 3: driver.DriverService.RegisterDriver:output_type -> driver.RegisterDriverResposne
-	3, // 4: driver.DriverService.UnregisterDriver:output_type -> driver.RegisterDriverResposne
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 1: driver.RegisterDriverResposne.driver:type_name -> driver.Driver
+	2, // 2: driver.DriverService.RegisterDriver:input_type -> driver.RegisterDriverRequest
+	2, // 3: driver.DriverService.UnregisterDriver:input_type -> driver.RegisterDriverRequest
+	3, // 4: driver.DriverService.RegisterDriver:output_type -> driver.RegisterDriverResposne
+	3, // 5: driver.DriverService.UnregisterDriver:output_type -> driver.RegisterDriverResposne
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_driver_proto_init() }

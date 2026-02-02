@@ -2,8 +2,6 @@ package types
 
 import (
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PaymentStatus string
@@ -29,14 +27,14 @@ type Payment struct {
 }
 
 type PaymentIntent struct {
-	ID             primitive.ObjectID `json:"id"`
-	TripID         string             `json:"trip_id"`
-	UserID         string             `json:"user_id"`
-	DriverID       string             `json:"driver_id"`
-	Amount         int64              `json:"amount"`
-	Currency       string             `json:"currency"`
-	StripSessionID string             `json:"strip_session_id"`
-	CreatedAt      time.Time          `json:"created_at"`
+	ID             string    `json:"id"`
+	TripID         string    `json:"trip_id"`
+	UserID         string    `json:"user_id"`
+	DriverID       string    `json:"driver_id"`
+	Amount         int64     `json:"amount"`
+	Currency       string    `json:"currency"`
+	StripSessionID string    `json:"strip_session_id"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type PaymentConfig struct {

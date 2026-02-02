@@ -15,6 +15,6 @@ func NewQueueConsumer(rb *RabbitMQ, connManager *ConnManager, qName string) *Que
 }
 
 func (qc *QueueConsumer) Start() error {
-
-	err := qc.rb.ConsumeMessages(ctx context.Context, qc.qName, handler MessageHandler) 
+	return nil
+	//err := qc.rb.ConsumeMessages(ctx context.Context, qc.qName, handler MessageHandler)
 }

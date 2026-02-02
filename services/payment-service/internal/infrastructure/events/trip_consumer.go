@@ -4,20 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"ride-sharing/services/trip-service/internal/service"
+
+	"ride-sharing/services/payment-service/internal/domain"
 	"ride-sharing/shared/contracts"
+	"ride-sharing/shared/messaging"
 
 	"github.com/rabbitmq/amqp091-go"
 )
 
 type driverConsumer struct {
 	rabbitMq *messaging.RabbitMQ
-	service  *service.TripService
+	service  domain.Service
 }
 
-func NewTripConsumer(rabbitMq *messaging.RabbitMQ) *driverConsumer {
+func NewTripConsumer(rabbitMq *messaging.RabbitMQ, svc domain.Service) *driverConsumer {
 	return &driverConsumer{
 		rabbitMq: rabbitMq,
+		service:  svc,
 	}
 }
 
@@ -51,7 +54,7 @@ func (c *driverConsumer) Listen(ctx context.Context, queueName string) error {
 	})
 }
 
-func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messaging.DriverTripResponseData) error {
+func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messaging.PaymentTripResponseData) error {
 
 	log.Printf("Handling trip accepted by driver: %s", payload.TripID)
 
@@ -69,13 +72,13 @@ func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messagi
 		return err
 	}
 
-	log.Printf("payment session created %s", paymentSession.StripeSessionID)
+	log.Printf("payment session created %s", paymentSession.StripSessionID)
 
 	//publish payment session created
 	paymentPayLoad := messaging.PaymentEventSessionCreatedData{
 		TripID:    payload.TripID,
-		SessionID: paymentSession.StripeSessionID,
-		Amount:    float(paymentSession.Amount) / 100.0, // convert cents to dollars
+		SessionID: paymentSession.StripSessionID,
+		Amount:    float64(paymentSession.Amount) / 100.0, // convert cents to dollars
 	}
 
 	payloadBytes, err := json.Marshal(paymentPayLoad)
@@ -84,7 +87,7 @@ func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messagi
 		return err
 	}
 
-	if err := c.rabbitmq.PublishMessage(ctx, contracts.PaymentEventSessionCreated,
+	if err := c.rabbitMq.PublishMessage(ctx, contracts.PaymentEventSessionCreated,
 		contracts.AmqpMessage{
 			OwnerID: payload.UserID,
 			Data:    payloadBytes,

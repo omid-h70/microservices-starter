@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"ride-sharing/services/payment-service/internal/infrastructure/events"
 	"ride-sharing/services/payment-service/internal/infrastructure/stripe"
 	"ride-sharing/services/payment-service/internal/service"
 	"ride-sharing/services/payment-service/pkg/types"
-	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 	"syscall"
@@ -45,20 +45,16 @@ func main() {
 	paymentProcessor := stripe.NewStripeClient(stripeCfg)
 	svc := service.NewPaymentService(paymentProcessor)
 
-	// Start Driver Consumer
-	tripConsumer := events.NewTripConsumer(rabbitmq, svc)
-	go tripConsumer.Listen()
-
-	//Start Payment Consumer
-	paymentConsumer := events.NewTripConsumer(rabbitmq, svc)
-	go paymentConsumer.Listen()
-
 	rabbitmq, err := messaging.NewRabbitMQ(rabbitmqURI)
 	if err != nil {
 		log.Fatalf("rabbit is down %v", err)
 	}
 	defer rabbitmq.Close()
 	log.Printf("Rabbitmq started on %s ", rabbitmqURI)
+
+	// Start Driver Consumer
+	tripConsumer := events.NewTripConsumer(rabbitmq, svc)
+	go tripConsumer.Listen(context.Background(), messaging.FindAvailableDriversQueue)
 
 	//wait for shutdown signal
 	<-ctx.Done()

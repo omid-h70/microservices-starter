@@ -6,7 +6,7 @@ option go_package ="shared/proto/driver;driver";
 
 message Location {
     double latitude =1;
-    double longitue =2;
+    double longitude =2;
 }
 
 message Driver {
@@ -26,10 +26,9 @@ service DriverService{
 
 message RegisterDriverRequest{
     string driver_id = 1;
-    string pacakge_slug =2;
+    string package_slug =2;
 }
 
 message RegisterDriverResposne{
-    string driver_id = 1;  
-    string pacakge_slug =2;  
+    Driver driver = 1;  
 }

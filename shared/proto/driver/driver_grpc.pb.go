@@ -26,6 +26,8 @@ const (
 // DriverServiceClient is the client API for DriverService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// DriverService
 type DriverServiceClient interface {
 	RegisterDriver(ctx context.Context, in *RegisterDriverRequest, opts ...grpc.CallOption) (*RegisterDriverResposne, error)
 	UnregisterDriver(ctx context.Context, in *RegisterDriverRequest, opts ...grpc.CallOption) (*RegisterDriverResposne, error)
@@ -62,6 +64,8 @@ func (c *driverServiceClient) UnregisterDriver(ctx context.Context, in *Register
 // DriverServiceServer is the server API for DriverService service.
 // All implementations must embed UnimplementedDriverServiceServer
 // for forward compatibility.
+//
+// DriverService
 type DriverServiceServer interface {
 	RegisterDriver(context.Context, *RegisterDriverRequest) (*RegisterDriverResposne, error)
 	UnregisterDriver(context.Context, *RegisterDriverRequest) (*RegisterDriverResposne, error)

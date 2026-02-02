@@ -39,15 +39,13 @@ message PreviewTripResponse{
 }
 
 message CreateTripRequest{
-    string trip_id=1;
-    Route route=2;
-    repeated RideFare ride_fares=3;
+    string ride_fare_id = 1;
+    string user_id = 2;
 }
 
 message CreateTripResponse{
-    string trip_id=1;
-    Route route=2;
-    repeated RideFare ride_fares=3;
+    string trip_id = 1;
+    Trip trip = 2;
 }
 
 message Trip{

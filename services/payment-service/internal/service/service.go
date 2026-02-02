@@ -11,10 +11,10 @@ import (
 )
 
 type paymentService struct {
-	processor domain.paymentProcessor
+	processor domain.PaymentProcessor
 }
 
-func NewPaymentService(processor domain.paymentProcessor) domain.Service {
+func NewPaymentService(processor domain.PaymentProcessor) domain.Service {
 	return &paymentService{
 		processor: processor,
 	}
@@ -34,7 +34,7 @@ func (s *paymentService) CreatePaymentSession(
 		"driverID": driverID,
 	}
 
-	sessionID, err := s.paymentProcessor.CreatePaymentSession(
+	sessionID, err := s.processor.CreatePaymentSession(
 		ctx,
 		amount,
 		currency,

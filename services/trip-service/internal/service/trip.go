@@ -20,8 +20,8 @@ type TripService struct {
 	repo domain.TripRepository
 }
 
-func NewTripService(repo domain.TripRepository) TripService {
-	return TripService{
+func NewTripService(repo domain.TripRepository) *TripService {
+	return &TripService{
 		repo: repo,
 	}
 }
@@ -158,6 +158,6 @@ func (d *TripService) GetAndValidateFare(ctx context.Context, fareID, userID str
 func (d *TripService) GetTripByID(ctx context.Context, tripID string) (*domain.TripModel, error) {
 	return d.repo.GetTripByID(ctx, tripID)
 }
-func (d *TripService) UpdateTrip(ctx context.Context, status string, driver *pbd.Driver) error {
-	return d.repo.UpdateTrip(ctx, status, driver)
+func (d *TripService) UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error {
+	return d.repo.UpdateTrip(ctx, tripID, status, driver)
 }

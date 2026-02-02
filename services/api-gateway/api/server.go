@@ -28,7 +28,7 @@ func (api *HttpApi) AddRoutes() {
 		w.Write([]byte("Hello from API Gateway \n path => " + msg))
 	})
 
-	api.mux.HandleFunc("POST /trip/preview", handleTripPreview)
+	api.mux.HandleFunc("POST /trip/preview", api.handleTripPreview)
 	api.mux.HandleFunc("/webhook/stripe", api.handleStripeWebhook)
 
 	api.mux.HandleFunc("/ws/drivers", api.handleDriverWebSocket)

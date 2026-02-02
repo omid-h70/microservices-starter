@@ -10,9 +10,10 @@ import (
 	"ride-sharing/services/api-gateway/utils"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/env"
+	"ride-sharing/shared/messaging"
 
-	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
-	//github.com/stripe/stripe-go/v81/webhook
+	"github.com/stripe/stripe-go/v81"
+	"github.com/stripe/stripe-go/v81/webhook"
 )
 
 func (api *HttpApi) handleTripPreview(w http.ResponseWriter, r *http.Request) {
@@ -104,33 +105,33 @@ func (api *HttpApi) handleStripeWebhook(w http.ResponseWriter, r *http.Request) 
 			http.Error(w, "Invalid payload", http.StatusBadRequest)
 			return
 		}
-	}
 
-	payload := messaging.PaymentStatusUpdateData{
-		TripID:   session.Metadata["trip_id"],
-		UserID:   session.Metadata["user_id"],
-		DriverID: session.Metadata["driver_id"],
-	}
+		payload := messaging.PaymentStatusUpdateData{
+			TripID:   session.Metadata["trip_id"],
+			UserID:   session.Metadata["user_id"],
+			DriverID: session.Metadata["driver_id"],
+		}
 
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		log.Printf("error pasing webhook event data %v", err)
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
-		return
-	}
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
+			log.Printf("error pasing webhook event data %v", err)
+			http.Error(w, "Invalid payload", http.StatusBadRequest)
+			return
+		}
 
-	message := contracts.AmqpMessage{
-		OwnerID: session.MetaData["user_id"],
-		Data:    payloadBytes,
-	}
+		message := contracts.AmqpMessage{
+			OwnerID: session.Metadata["user_id"],
+			Data:    payloadBytes,
+		}
 
-	if err := rb.PublishMessage(
-		r.Context(),
-		contracts.PaymentEventSuccess,
-		message,
-	); err != nil {
-		log.Printf("error publishing payment event %v", err)
-		http.Error(w, "failed to publish payment event", http.StatusBadRequest)
-		return
+		if err := api.rabbitmq.PublishMessage(
+			r.Context(),
+			contracts.PaymentEventSuccess,
+			message,
+		); err != nil {
+			log.Printf("error publishing payment event %v", err)
+			http.Error(w, "failed to publish payment event", http.StatusBadRequest)
+			return
+		}
 	}
 }

@@ -4,6 +4,10 @@ import (
 	pb "ride-sharing/shared/proto/driver"
 	"ride-sharing/shared/util"
 	"sync"
+
+	math "math/rand/v2"
+
+	"github.com/mmcloughlin/geohash"
 )
 
 type driverInMap struct {
@@ -32,7 +36,7 @@ func (s *Service) FindAavailableDrivers(packageType string) []string {
 	return matchingDrivers
 }
 
-func (s *Service) RegisterDriver(driverID string, pacakgeSlug string) (*pb.Driver, error) {
+func (s *Service) RegisterDriver(driverID string, packageSlug string) (*pb.Driver, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -44,4 +48,31 @@ func (s *Service) RegisterDriver(driverID string, pacakgeSlug string) (*pb.Drive
 
 	//we can ignore this property for now, but it must be sent to frontend
 	geohash := geohash.Encode(randomRoute[0][0], randomRoute[0][1])
+
+	driver := &pb.Driver{
+		Id:          driverID,
+		GeoHash:     geohash,
+		Location:    &pb.Location{Latitude: randomRoute[0][0], Longitude: randomRoute[0][1]},
+		Name:        "Lando Norris",
+		PackageSlug: packageSlug,
+		ProfilePic:  randomAvatar,
+		CarPlate:    randomPlate,
+	}
+
+	s.drivers = append(s.drivers, &driverInMap{
+		Driver: driver,
+	})
+
+	return driver, nil
+}
+
+func (s *Service) UnregisterDriver(driverId string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for i, driver := range s.drivers {
+		if driver.Driver.Id == driverId {
+			s.drivers = append(s.drivers[:i], s.drivers[i+1:]...)
+		}
+	}
 }

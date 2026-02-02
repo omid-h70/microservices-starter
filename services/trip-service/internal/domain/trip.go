@@ -25,7 +25,7 @@ func (t *TripModel) ToProto() *pb.Trip {
 		UserId:       t.UserID,
 		Status:       t.Status,
 		SelectedFare: t.RideFare.ToProto(),
-		Route:        t.RideFare.Route.toProto(),
+		Route:        t.RideFare.Route.ToProto(),
 		Driver:       t.Driver,
 	}
 }
@@ -35,7 +35,7 @@ type TripRepository interface {
 	SaveRideFare(ctx context.Context, f *RideFareModel) error
 	GetRideFareByID(ctx context.Context, id string) (*RideFareModel, error)
 	GetTripByID(ctx context.Context, tripID string) (*TripModel, error)
-	UpdateTrip(ctx context.Context, status string, driver *pbd.Driver) error
+	UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error
 }
 
 type TripService interface {
@@ -48,5 +48,5 @@ type TripService interface {
 	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*RideFareModel, error)
 	GetAndValidateFare(ctx context.Context, fareID, userID string) (*RideFareModel, error)
 	GetTripByID(ctx context.Context, tripID string) (*TripModel, error)
-	UpdateTrip(ctx context.Context, status string, driver *pbd.Driver) error
+	UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error
 }

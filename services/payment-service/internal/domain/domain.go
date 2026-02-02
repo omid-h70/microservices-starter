@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"ride-sharing/services/payment-service/pkg/types"
+)
 
 type Service interface {
 	CreatePaymentSession(ctx context.Context, tripID, userID, driverID string, amount int64, currency string) (*types.PaymentIntent, error)

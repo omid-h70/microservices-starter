@@ -5,22 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"ride-sharing/services/trip-service/internal/service"
+	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
-	"ride-sharing/shared/proto/trip"
+
+	pbd "ride-sharing/shared/proto/driver"
 
 	"github.com/rabbitmq/amqp091-go"
 )
 
 type driverConsumer struct {
 	rabbitMq *messaging.RabbitMQ
-	service  *service.TripService
+	service  domain.TripService
 }
 
-func NewTripConsumer(rabbitMq *messaging.RabbitMQ) *driverConsumer {
+func NewDriverConsumer(rabbitMq *messaging.RabbitMQ, svc domain.TripService) *driverConsumer {
 	return &driverConsumer{
 		rabbitMq: rabbitMq,
+		service:  svc,
 	}
 }
 
@@ -41,7 +43,7 @@ func (c *driverConsumer) Listen(ctx context.Context, queueName string) error {
 
 		switch msg.RoutingKey {
 		case contracts.DriverCmdTripAccept:
-			if err := c.handleTripAccepted(ctx, payload); err != nil {
+			if err := c.handleTripAccepted(ctx, payload.TripID, payload.Driver); err != nil {
 				log.Printf("failed to handleTripAccepted %v", err)
 				return err
 			}
@@ -54,21 +56,21 @@ func (c *driverConsumer) Listen(ctx context.Context, queueName string) error {
 	})
 }
 
-func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messaging.DriverTripResponseData) error {
+func (c *driverConsumer) handleTripAccepted(ctx context.Context, tripID string, driver *pbd.Driver) error {
 	//1. validate if trip exists
-	tripModel, err := c.service.GetTripByID(ctx, payload.TripID)
+	tripModel, err := c.service.GetTripByID(ctx, tripID)
 	if err != nil {
 		return fmt.Errorf("1.get trip by id - failed %v", err)
 	}
 	//2. update the trip
-	if err := c.service.UpdateTrip(ctx, "accepted", payload.Driver); err != nil {
+	if err := c.service.UpdateTrip(ctx, tripID, "accepted", driver); err != nil {
 		log.Printf("failed to update the trip %v", err)
 		return fmt.Errorf("update trip failed %v", err)
 	}
 
 	//FIXME you can return it in update rather than another db fetch
 	//get it again to have in updated last form
-	tripModel, err = c.service.GetTripByID(ctx, payload.TripID)
+	trip, err := c.service.GetTripByID(ctx, tripID)
 	if err != nil {
 		return fmt.Errorf("2.get trip by id - failed %v", err)
 	}
@@ -87,10 +89,10 @@ func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messagi
 	}
 	//TODO :: Notify payment service to do the payment
 
-	marshalledPayLoad, err := josn.Marshal(messaging.PaymentTripResponseData{
+	marshalledPayLoad, err := json.Marshal(messaging.PaymentTripResponseData{
 		TripID:   tripID,
 		UserID:   trip.UserID,
-		DriverID: driver.ID,
+		DriverID: driver.Id,
 		Amount:   trip.RideFare.TotalPricesInCents,
 		Currency: "USD",
 	})
@@ -100,7 +102,7 @@ func (c *driverConsumer) handleTripAccepted(ctx context.Context, payload messagi
 
 	err = c.rabbitMq.PublishMessage(ctx, contracts.TripEventDriverAssigned, contracts.AmqpMessage{
 		OwnerID: tripModel.UserID,
-		Data:    marshalledTrip,
+		Data:    marshalledPayLoad,
 	})
 	if err != nil {
 		return fmt.Errorf("publish message failed %v", err)

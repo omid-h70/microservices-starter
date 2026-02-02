@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	httpserver "ride-sharing/services/trip-service/cmd/api"
@@ -33,17 +34,17 @@ func main() {
 
 	//publisher := events.NewTripEventPubisher(rabbitmq)
 	driverConsumer := events.NewDriverConsumer(rabbitmq, svc)
-	go driverConsumer.Listen()
+	go driverConsumer.Listen(context.Background(), messaging.DriverTripResponseQueue)
 
 	errorChan := make(chan error)
-	httpSever, _ := httpserver.NewHttpServer(&svc)
+	httpSever, _ := httpserver.NewHttpServer(svc)
 	httpSever.SetupRoutes()
 
 	go func() {
 		errorChan <- httpSever.RunServer(httpAddr)
 	}()
 
-	gRPCServer, _ := grpcserver.NewGRPCServer(&svc)
+	gRPCServer, _ := grpcserver.NewGRPCServer(svc)
 	gRPCServer.SetupRoutes()
 
 	go func() {
