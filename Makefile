@@ -49,13 +49,21 @@ build-dev-api-gateway:
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/api-gateway ./services/api-gateway  && \
 	docker build --no-cache -t ${API_GATEWAY_IMAGE} -f ./infra/development/docker/dev-api-gateway.Dockerfile .
 
-debug-api-gateway:
-	docker run --rm -d -p 7777:8081 ${API_GATEWAY_IMAGE}
-
 build-api-gateway:
 	export PATH=$$PATH:/usr/local/go/bin && \
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/api-gateway ./services/api-gateway  && \
 	docker build --no-cache -t ${API_GATEWAY_IMAGE} -f ./infra/development/docker/api-gateway.Dockerfile .
+
+build-driver-service:
+	export PATH=$$PATH:/usr/local/go/bin && \
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/driver-service ./services/driver-service && \
+	docker build --no-cache -t ${DRIVER_SERVICE_IMAGE} -f ./infra/development/docker/driver-service.Dockerfile .
+
+
+build-payment-service:
+	export PATH=$$PATH:/usr/local/go/bin && \
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/payment-service ./services/payment-service/cmd && \
+	docker build --no-cache -t ${PAYMENT_SERVICE_IMAGE} -f ./infra/development/docker/payment-service.Dockerfile .
 
 build-trip-service:
 	export PATH=$$PATH:/usr/local/go/bin && \
@@ -63,11 +71,17 @@ build-trip-service:
 	docker build --no-cache -t ${TRIP_SERVICE_IMAGE} -f ./infra/development/docker/trip-service.Dockerfile .
 
 #The @ suppresses printing of the command itself, so the output will be just:
-build-all: build-trip-service build-dev-api-gateway
+build-all: build-trip-service build-dev-api-gateway build-driver-service build-payment-service
 	@echo "All builds done!"
+
+debug-api-gateway:
+	docker run --rm -d -p 7777:8081 ${API_GATEWAY_IMAGE}
 
 debug-trip-service:
 	docker run --rm -d -p 7777:8081 ${TRIP_SERVICE_IMAGE}
+
+env:
+	cp ./.env.example ./.env
 
 k3d-create-registry:
 	k3d registry create ${CLUSTER_REGISTERY_NAME} --port 5000
@@ -78,7 +92,7 @@ k3d-delete-registry:
 k3d-push-images:
 # docker tag web:1.0.0 k3d-${CLUSTER_REGISTERY_NAME}:5000/web:1.0.0 && docker push k3d-${CLUSTER_REGISTERY_NAME}:5000/web:1.0.0
 	docker tag $(FRONTEND_IMAGE) localhost:5000/$(FRONTEND_IMAGE) && docker push localhost:5000/$(FRONTEND_IMAGE)
-	docker tag ${API_GATEWAY_IMAGE} localhost:5000/${API_GATEWAY_IMAGE} && docker push localhost:5000/${API_GATEWAY_IMAGE}
+	docker tag $(API_GATEWAY_IMAGE) localhost:5000/$(API_GATEWAY_IMAGE) && docker push localhost:5000/$(API_GATEWAY_IMAGE)
 
 k3d-apply:
 	kubectl apply -f ./infra/development/k8s/app-config.yaml

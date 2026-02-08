@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	grpcServeAdrr = env.GetString("GRPC_ADDR", ":9004")
-	rabbitmqURI   = env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672")
-	appURL        = env.GetString("APP_URL", "http://localhost:3000")
+	grpcServerAdrr = env.GetString("GRPC_ADDR", ":9004")
+	rabbitmqURI    = env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672")
+	appURL         = env.GetString("APP_URL", "http://localhost:3000")
 )
 
 func main() {

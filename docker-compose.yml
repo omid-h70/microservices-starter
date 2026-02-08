@@ -7,6 +7,9 @@ services:
       - "8881:8081"
     environment:
       - TRIP_SERVICE_URL=trip-service:9091
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - trip-network
   rabbitmq:
@@ -15,6 +18,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 60s
+      retries: 15
+      start_period: 10s
     networks:
       - trip-network
   trip-service:
@@ -23,8 +32,35 @@ services:
     ports:
       - "8882:8081"
       - "9991:9091"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      until rabbitmq-diagnostics -q ping;
+      do
+        echo 'Waiting for RabbitMQ...';
+        sleep 3;
+      done;
+      exec /app/trip-service
+      "    
     networks:
       - trip-network
+  # driver-service:
+  #   image: ${DRIVER_SERVICE_IMAGE}
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - trip-network    
+  # payment-service:
+  #   image: ${PAYMENT_SERVICE_IMAGE}
+  #   restart: unless-stopped
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - trip-network   
   frontend:
     image: ${FRONTEND_IMAGE}
     restart: unless-stopped

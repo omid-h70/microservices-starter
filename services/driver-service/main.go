@@ -37,7 +37,7 @@ func main() {
 
 	consumer := NewTripConsumer(rabbitmq)
 	go func() {
-		err := consumer.Listen(context.Background(), "hello")
+		err := consumer.Listen(context.Background(), messaging.DriverCmdTripRequestQueue)
 		if err != nil {
 			log.Fatalf("failed to listen for messages")
 		}
