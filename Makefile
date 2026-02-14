@@ -80,6 +80,9 @@ debug-api-gateway:
 debug-trip-service:
 	docker run --rm -d -p 7777:8081 ${TRIP_SERVICE_IMAGE}
 
+rabbitmq:
+	docker run --rm -d --name rabbitmq -p 5672:5672 -p 15672:15672 $(RABBITMQ_IMAGE)
+
 env:
 	cp ./.env.example ./.env
 

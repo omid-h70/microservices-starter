@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	pb "ride-sharing/shared/proto/driver"
 
 	"google.golang.org/grpc"
@@ -16,12 +17,22 @@ type grpcHandler struct {
 
 var _ pb.DriverServiceServer = (*grpcHandler)(nil)
 
+func printDebugInfo(grpcServer *grpc.Server) {
+	for s, info := range grpcServer.GetServiceInfo() {
+		log.Println("registered service:", s)
+		for _, m := range info.Methods {
+			log.Println("  method:", m.Name)
+		}
+	}
+}
+
 // NOTE :: its dependency injection dude !
 func NewGRPCHandler(grpcServer *grpc.Server, service *Service) *grpcHandler {
 	handler := &grpcHandler{
 		service: service,
 	}
 	pb.RegisterDriverServiceServer(grpcServer, handler)
+	printDebugInfo(grpcServer)
 	return handler
 }
 

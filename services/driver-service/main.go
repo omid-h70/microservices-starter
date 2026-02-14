@@ -22,11 +22,21 @@ var (
 func main() {
 	log.Printf("Driver Service !")
 
-	grpcServer := grpc.NewServer()
-	service := NewServicce()
+	// Create root context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	NewGRPCHandler(grpcServer, service)
-	printDebugInfo(grpcServer)
+	// Listen for OS signals
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		log.Println("Shutdown signal received")
+		cancel()
+	}()
+	//-------Create root context Done !
+
+	service := NewServicce()
 
 	rabbitmq, err := messaging.NewRabbitMQ(rabbitMQURI)
 	if err != nil {
@@ -35,58 +45,46 @@ func main() {
 	defer rabbitmq.Close()
 	log.Printf("Rabbitmq started on %s ", rabbitMQURI)
 
+	errChan := make(chan error, 1)
 	consumer := NewTripConsumer(rabbitmq)
 	go func() {
-		err := consumer.Listen(context.Background(), messaging.DriverCmdTripRequestQueue)
+		err = consumer.Listen(ctx, messaging.DriverCmdTripRequestQueue)
 		if err != nil {
-			log.Fatalf("failed to listen for messages")
+			errChan <- err
 		}
 	}()
-}
 
-func printDebugInfo(grpcServer *grpc.Server) {
-	for s, info := range grpcServer.GetServiceInfo() {
-		log.Println("registered service:", s)
-		for _, m := range info.Methods {
-			log.Println("  method:", m.Name)
+	grpcServer := grpc.NewServer()
+	NewGRPCHandler(grpcServer, service)
+	go func() {
+		err = runGRPCServer(grpcServer, grpcAddr)
+		if err != nil {
+			errChan <- err
 		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		log.Printf("we're done here")
+	case err := <-errChan:
+		log.Printf("sth went wrong %v", err)
+		cancel()
 	}
 }
 
 func runGRPCServer(server *grpc.Server, grpcAddr string) error {
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	errorChan := make(chan error, 1)
-
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Printf("failed to listen: %v", err)
+		return err
 	}
 
-	//printDebugInfo()
-
-	go func() {
-		shutdownChan := make(chan os.Signal, 1)
-		signal.Notify(shutdownChan, syscall.SIGTERM, os.Interrupt)
-		<-shutdownChan
-		cancel()
-	}()
-
-	go func() {
-		if err := server.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
-		}
-		errorChan <- err
-	}()
-
-	select {
-	case <-ctx.Done():
-	case err = <-errorChan:
-		log.Println("grpc server is about to end")
-		server.GracefulStop()
+	if err := server.Serve(lis); err != nil {
+		log.Printf("failed to grpc serve: %v", err)
+		return err
 	}
 
-	return err
+	log.Printf("grpc server started on %s", grpcAddr)
+	return nil
 }
