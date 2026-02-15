@@ -6,7 +6,7 @@ services:
     ports:
       #dlv port
       - "40000:40000"
-      #- "8881:8081"
+      - "8881:8885"
     environment:
       - TRIP_SERVICE_URL=trip-service:9091
     depends_on:

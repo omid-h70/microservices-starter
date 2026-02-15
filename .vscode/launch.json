@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/services/api-gateway/",
             "env" :{
                 "RABBITMQ_URI" :"amqp://guest:guest@127.0.0.1:5672",
-                "HTTP_ADDR" :"127.0.0.1:8881",
+                "HTTP_ADDR" :"127.0.0.1:8885",
             }
         },
         {
