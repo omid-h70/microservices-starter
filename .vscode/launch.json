@@ -27,5 +27,29 @@
                 "GRPC_ADDR" :"127.0.0.1:9991",
             }
         },
+        {
+            "name": "Debug Trip Service",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",//or set specifically debug in some cases
+            "program": "${workspaceFolder}/services/trip-service/cmd/",
+            "env" :{
+                "RABBITMQ_URI" :"amqp://guest:guest@127.0.0.1:5672",
+                "HTTP_ADDR" :"127.0.0.1:8881",
+                "GRPC_ADDR" :"127.0.0.1:9991",
+            }
+        },
+        {
+            "name": "Debug Payment Service",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",//or set specifically debug in some cases
+            "program": "${workspaceFolder}/services/payment-service/cmd/",
+            "env" :{
+                "RABBITMQ_URI" :"amqp://guest:guest@127.0.0.1:5672",
+                "HTTP_ADDR" :"127.0.0.1:8881",
+                "GRPC_ADDR" :"127.0.0.1:9991",
+            }
+        },
     ]
 }

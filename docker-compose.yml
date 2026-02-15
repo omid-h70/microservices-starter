@@ -1,10 +1,12 @@
 version: "3.9"
 services:
   api-gateway:
-    image: ${API_GATEWAY_IMAGE}
+    image: ${API_GATEWAY_DEV_IMAGE}
     restart: unless-stopped
     ports:
-      - "8881:8081"
+      #dlv port
+      - "40000:40000"
+      #- "8881:8081"
     environment:
       - TRIP_SERVICE_URL=trip-service:9091
     depends_on:
@@ -12,6 +14,18 @@ services:
         condition: service_healthy
     networks:
       - trip-network
+  # api-gateway:
+  #   image: ${API_GATEWAY_IMAGE}
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8881:8081"
+  #   environment:
+  #     - TRIP_SERVICE_URL=trip-service:9091
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - trip-network
   rabbitmq:
     image: ${RABBITMQ_IMAGE}
     restart: unless-stopped

@@ -44,10 +44,10 @@ build-web:
 	docker build -t $(FRONTEND_IMAGE) -f ./infra/development/docker/web.Dockerfile .
 
 #for path compatibility between normal user build and sudo build "export" added
-build-dev-api-gateway:
+build-api-gateway-dev:
 	export PATH=$$PATH:/usr/local/go/bin && \
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/api-gateway ./services/api-gateway  && \
-	docker build --no-cache -t ${API_GATEWAY_IMAGE} -f ./infra/development/docker/dev-api-gateway.Dockerfile .
+	docker build --no-cache -t ${API_GATEWAY_DEV_IMAGE} -f ./infra/development/docker/api-gateway-dev.Dockerfile .
 
 build-api-gateway:
 	export PATH=$$PATH:/usr/local/go/bin && \
@@ -70,8 +70,11 @@ build-trip-service:
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -mod=vendor -o ./build/trip-service ./services/trip-service/cmd && \
 	docker build --no-cache -t ${TRIP_SERVICE_IMAGE} -f ./infra/development/docker/trip-service.Dockerfile .
 
+build-all-debug: build-api-gateway-dev
+	@echo "All debug builds done!"
+
 #The @ suppresses printing of the command itself, so the output will be just:
-build-all: build-trip-service build-dev-api-gateway build-driver-service build-payment-service
+build-all: build-trip-service build-api-gateway build-driver-service build-payment-service
 	@echo "All builds done!"
 
 debug-api-gateway:

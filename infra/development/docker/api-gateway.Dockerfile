@@ -15,4 +15,4 @@ WORKDIR /app
 COPY --from=builder /app/build/api-gateway .
 
 EXPOSE 8081
-CMD ["/app/api-gateway"]
+CMD ["/app/build/api-gateway"]
